@@ -1,0 +1,83 @@
+import requests
+from bs4 import BeautifulSoup
+import time
+import random
+import pandas as pd
+
+'''
+0P0000YVZ3 Länsförsäkringar Global Indexnära
+0P00000K19 AMF Räntefond Lång
+'''
+
+base_url = 'https://www.morningstar.se/Funds/Quicktake/Overview.aspx?perfid='
+
+# url_1 = base_url + 'BOL:SS'
+
+search_ls = ['0P0000YVZ3', '0P00000K19']
+# initialize a list to store the fund NAV
+comments = []
+
+headers = {'user-agent': 'Mozilla/5.0'}
+
+# 首先我们写好抓取网页的函数
+def get_html(url):
+    try:
+        r = requests.get(url,timeout=50, headers = headers)
+        # r.raise_for_status()
+        #这里我们知道百度贴吧的编码是utf-8，所以手动设置的。爬去其他的页面时建议使用：
+        # r.endcodding = r.apparent_endconding()
+        # r.encoding='utf-8'
+        return r.text
+    except:
+        return " ERROR "
+
+def get_content(url, share_ls):
+    '''
+    analyze the webpage
+    '''
+
+    # initialize a dict for storing the results
+    comments = []
+
+    for share_t in share_ls:
+        comment = {}
+
+        url_sub = base_url + share_t
+
+        print(url_sub)
+
+        timeDelay = random.randrange(5, 15)
+
+        time.sleep(timeDelay)
+
+        try:
+            # download the webpage
+            html = get_html(url_sub)
+
+            # analyze it use BS4
+            soup = BeautifulSoup(html, 'lxml')
+
+            table = soup.find('table', attrs={'class': 'alternatedtoplist halftoplist'})
+
+            # comment['detail']
+
+            rows = table.find_all('td')[1:3]
+            for row in rows:
+                print(row.get_text().strip())
+
+            # print(comment)
+
+            # comments.append(comment)
+
+            # print(comments)
+
+        except:
+            print('fail')
+
+    return comments
+
+content = get_content(base_url, search_ls)
+
+# df = pd.DataFrame(content)
+# print(df)
+# df.to_csv('quotes.csv')
